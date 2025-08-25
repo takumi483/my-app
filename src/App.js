@@ -16,26 +16,16 @@ function App() {
     }
 
     const contractDate = new Date(contractMonth);
-    let blacklistSafeDate = addMonths(contractDate, 3); // ブラックリスト対策：最低3か月
-    let extraNote = '';
-    let suggestDate = null;
-
-    if (carrier === 'docomo' || carrier === 'au' || carrier === 'softbank') {
-      suggestDate = addMonths(contractDate, 24); // 旧2年契約向け
-      extraNote = '※2年契約の違約金がかからない月も考慮しています';
-    } else {
-      suggestDate = blacklistSafeDate;
-    }
+    const safeCancelDate = addMonths(contractDate, 3); // ブラックリスト回避の最短期間：3か月
 
     setResult({
-      suggestDate,
-      extraNote,
+      safeCancelDate,
     });
   };
 
   return (
     <div className="container">
-      <h1>解約月チェックツール</h1>
+      <h1>ブラックリスト回避用 解約月チェック</h1>
       <form onSubmit={handleSubmit}>
         <label>契約月：</label>
         <input
@@ -67,8 +57,8 @@ function App() {
 
       {result && (
         <div className="result">
-          <p>ブラックリスト回避も考慮した安全な解約目安月：<strong>{format(result.suggestDate, 'yyyy年MM月')}</strong></p>
-          {result.extraNote && <p>{result.extraNote}</p>}
+          <p>最短で安全に解約できる目安月：<strong>{format(result.safeCancelDate, 'yyyy年MM月')}</strong></p>
+          <p>※ 契約から3か月以上経過が推奨（ブラックリスト回避のため）</p>
         </div>
       )}
     </div>
