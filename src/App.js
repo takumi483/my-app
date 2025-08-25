@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
-import { format } from 'date-fns';
+import { addMonths, format } from 'date-fns';
 import './App.css';
 
 function App() {
   const [contractMonth, setContractMonth] = useState('');
   const [carrier, setCarrier] = useState('');
   const [plan, setPlan] = useState('');
-  const [cashback, setCashback] = useState('');
   const [result, setResult] = useState(null);
 
   const handleSubmit = (e) => {
@@ -16,25 +15,21 @@ function App() {
       return;
     }
 
-    const now = new Date();
     const contractDate = new Date(contractMonth);
-    const monthsPassed =
-      now.getFullYear() * 12 + now.getMonth() -
-      (contractDate.getFullYear() * 12 + contractDate.getMonth());
+    let blacklistSafeDate = addMonths(contractDate, 3); // ブラックリスト対策：最低3か月
+    let extraNote = '';
+    let suggestDate = null;
 
-    let penalty = 0;
     if (carrier === 'docomo' || carrier === 'au' || carrier === 'softbank') {
-      if (monthsPassed < 24) {
-        penalty = 1000;
-      }
+      suggestDate = addMonths(contractDate, 24); // 旧2年契約向け
+      extraNote = '※2年契約の違約金がかからない月も考慮しています';
+    } else {
+      suggestDate = blacklistSafeDate;
     }
 
-    const finalCashback = parseInt(cashback || '0', 10) - penalty;
-
     setResult({
-      monthsPassed,
-      penalty,
-      finalCashback,
+      suggestDate,
+      extraNote,
     });
   };
 
@@ -67,22 +62,13 @@ function App() {
           placeholder="プラン名を入力"
         />
 
-        <label>キャッシュバック額（円）</label>
-        <input
-          type="number"
-          value={cashback}
-          onChange={(e) => setCashback(e.target.value)}
-          placeholder="例: 30000"
-        />
-
         <button type="submit">チェック</button>
       </form>
 
       {result && (
         <div className="result">
-          <p>契約からの経過月数: {result.monthsPassed}ヶ月</p>
-          <p>違約金: {result.penalty}円</p>
-          <p>キャッシュバック最終額: {result.finalCashback}円</p>
+          <p>ブラックリスト回避も考慮した安全な解約目安月：<strong>{format(result.suggestDate, 'yyyy年MM月')}</strong></p>
+          {result.extraNote && <p>{result.extraNote}</p>}
         </div>
       )}
     </div>
