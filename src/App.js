@@ -4,14 +4,15 @@ import './App.css';
 
 function App() {
   const [contractMonth, setContractMonth] = useState('');
-  const [category, setCategory] = useState('');
+  const [carrier, setCarrier] = useState('');
+  const [campaign, setCampaign] = useState('');
   const [result, setResult] = useState(null);
 
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    if (!contractMonth || !category) {
-      alert('契約月とキャンペーン内容を選択してください。');
+    if (!contractMonth || !carrier || !campaign) {
+      alert('契約月・キャリア・キャンペーン内容をすべて選択してください。');
       return;
     }
 
@@ -20,7 +21,7 @@ function App() {
     let safeDays = 180;
     let note = '';
 
-    switch (category) {
+    switch (campaign) {
       case 'high_cashback':
         minDays = 180;
         safeDays = 211;
@@ -39,7 +40,7 @@ function App() {
       case 'multi_mnp':
         minDays = 180;
         safeDays = 240;
-        note = '※複数回線・連続MNPはハイリスク。可能なら控えてください。';
+        note = '※複数回線・連続MNPはリスクが高いため、長めの利用が推奨されます。';
         break;
       default:
         break;
@@ -49,6 +50,7 @@ function App() {
     const safeDate = addDays(baseDate, safeDays);
 
     setResult({
+      carrier,
       minDate,
       safeDate,
       note,
@@ -57,7 +59,7 @@ function App() {
 
   return (
     <div className="container">
-      <h1>キャンペーン別 解約目安チェック</h1>
+      <h1>キャリア・キャンペーン別 解約目安チェック</h1>
       <form onSubmit={handleSubmit}>
         <label>契約月：</label>
         <input
@@ -66,8 +68,18 @@ function App() {
           onChange={(e) => setContractMonth(e.target.value)}
         />
 
+        <label>キャリアを選択</label>
+        <select value={carrier} onChange={(e) => setCarrier(e.target.value)}>
+          <option value="">選択してください</option>
+          <option value="docomo">ドコモ</option>
+          <option value="au">au / UQ / povo</option>
+          <option value="softbank">ソフトバンク / LINEMO / Y!mobile</option>
+          <option value="rakuten">楽天モバイル</option>
+          <option value="mvno">格安SIM（IIJmio等）</option>
+        </select>
+
         <label>キャンペーン内容を選択</label>
-        <select value={category} onChange={(e) => setCategory(e.target.value)}>
+        <select value={campaign} onChange={(e) => setCampaign(e.target.value)}>
           <option value="">選択してください</option>
           <option value="high_cashback">高額キャッシュバック（3万円以上）</option>
           <option value="mid_cashback">中額キャッシュバック（1～3万円）</option>
@@ -80,6 +92,7 @@ function App() {
 
       {result && (
         <div className="result">
+          <p>選択キャリア：<strong>{result.carrier}</strong></p>
           <p>📆 最低利用期間の目安：<strong>{format(result.minDate, 'yyyy年MM月')}</strong></p>
           <p>✅ 安全に解約できる目安：<strong>{format(result.safeDate, 'yyyy年MM月')}</strong></p>
           <p>{result.note}</p>
