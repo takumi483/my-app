@@ -1,64 +1,88 @@
 import React, { useState } from 'react';
-import { format, addMonths } from 'date-fns';
+import { format } from 'date-fns';
 import './App.css';
 
 function App() {
-  const [contractDate, setContractDate] = useState('');
+  const [contractMonth, setContractMonth] = useState('');
   const [carrier, setCarrier] = useState('');
-  const [cancelMonth, setCancelMonth] = useState('');
+  const [plan, setPlan] = useState('');
+  const [cashback, setCashback] = useState('');
+  const [result, setResult] = useState(null);
 
-  const calculateCancelMonth = () => {
-    if (!contractDate || !carrier) {
-      alert('契約月とキャリアを入力してください');
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!contractMonth || !carrier) {
+      alert('契約月とキャリアを選択してください。');
       return;
     }
 
-    const startDate = new Date(contractDate);
-    let cancelDate;
+    const now = new Date();
+    const contractDate = new Date(contractMonth);
+    const monthsPassed =
+      now.getFullYear() * 12 + now.getMonth() -
+      (contractDate.getFullYear() * 12 + contractDate.getMonth());
 
-    if (carrier === 'docomo') {
-      cancelDate = addMonths(startDate, 24);
-    } else if (carrier === 'au') {
-      cancelDate = addMonths(startDate, 23);
-    } else if (carrier === 'softbank') {
-      cancelDate = addMonths(startDate, 22);
+    let penalty = 0;
+    if (carrier === 'docomo' || carrier === 'au' || carrier === 'softbank') {
+      if (monthsPassed < 24) {
+        penalty = 1000;
+      }
     }
 
-    const result = format(cancelDate, 'yyyy年MM月');
-    setCancelMonth(result);
+    const finalCashback = parseInt(cashback || '0', 10) - penalty;
+
+    setResult({
+      monthsPassed,
+      penalty,
+      finalCashback,
+    });
   };
 
   return (
     <div className="container">
       <h1>解約月チェックツール</h1>
-
-      <div className="form-group">
+      <form onSubmit={handleSubmit}>
         <label>契約月：</label>
         <input
           type="month"
-          value={contractDate}
-          onChange={(e) => setContractDate(e.target.value)}
+          value={contractMonth}
+          onChange={(e) => setContractMonth(e.target.value)}
         />
-      </div>
 
-      <div className="form-group">
-        <label>キャリア：</label>
-        <select
-          value={carrier}
-          onChange={(e) => setCarrier(e.target.value)}
-        >
+        <label>キャリアを選択</label>
+        <select value={carrier} onChange={(e) => setCarrier(e.target.value)}>
           <option value="">選択してください</option>
           <option value="docomo">ドコモ</option>
-          <option value="au">au</option>
-          <option value="softbank">ソフトバンク</option>
+          <option value="au">au / UQ / povo</option>
+          <option value="softbank">ソフトバンク / LINEMO / Y!mobile</option>
+          <option value="rakuten">楽天モバイル</option>
+          <option value="mvno">格安SIM (例: IIJmio)</option>
         </select>
-      </div>
 
-      <button onClick={calculateCancelMonth}>解約月をチェック</button>
+        <label>プラン名（例: ahamo, LINEMOなど）</label>
+        <input
+          type="text"
+          value={plan}
+          onChange={(e) => setPlan(e.target.value)}
+          placeholder="プラン名を入力"
+        />
 
-      {cancelMonth && (
+        <label>キャッシュバック額（円）</label>
+        <input
+          type="number"
+          value={cashback}
+          onChange={(e) => setCashback(e.target.value)}
+          placeholder="例: 30000"
+        />
+
+        <button type="submit">チェック</button>
+      </form>
+
+      {result && (
         <div className="result">
-          <p>解約月は <strong>{cancelMonth}</strong> です。</p>
+          <p>契約からの経過月数: {result.monthsPassed}ヶ月</p>
+          <p>違約金: {result.penalty}円</p>
+          <p>キャッシュバック最終額: {result.finalCashback}円</p>
         </div>
       )}
     </div>
