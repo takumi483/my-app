@@ -1,80 +1,68 @@
-import React, { useState } from "react";
-import { addDays, format } from "date-fns";
+import React, { useState } from 'react';
+import { format, addMonths } from 'date-fns';
+import './App.css';
 
-export default function App() {
-  const [contractDate, setContractDate] = useState("");
-  const [carrier, setCarrier] = useState("");
-  const [plan, setPlan] = useState("");
-  const [cashback, setCashback] = useState("");
-  const [safeDate, setSafeDate] = useState("");
+function App() {
+  const [contractDate, setContractDate] = useState('');
+  const [carrier, setCarrier] = useState('');
+  const [cancelMonth, setCancelMonth] = useState('');
 
-  const baseDays = {
-    docomo: 180,
-    au: 211,
-    softbank: 181,
-    rakuten: 90,
-    mvno: 180
-  };
-
-  const calculateSafeDate = () => {
-    if (!contractDate || !carrier) return;
-
-    let days = baseDays[carrier] || 180;
-
-    const cashbackAmount = parseInt(cashback);
-    if (!isNaN(cashbackAmount)) {
-      if (cashbackAmount >= 30000) days += 30;
-      else if (cashbackAmount >= 10000) days += 15;
+  const calculateCancelMonth = () => {
+    if (!contractDate || !carrier) {
+      alert('契約月とキャリアを入力してください');
+      return;
     }
 
-    if (plan.toLowerCase().includes("ahamo") || plan.toLowerCase().includes("linemo")) {
-      days += 10;
+    const startDate = new Date(contractDate);
+    let cancelDate;
+
+    if (carrier === 'docomo') {
+      cancelDate = addMonths(startDate, 24);
+    } else if (carrier === 'au') {
+      cancelDate = addMonths(startDate, 23);
+    } else if (carrier === 'softbank') {
+      cancelDate = addMonths(startDate, 22);
     }
 
-    const resultDate = addDays(new Date(contractDate), days);
-    setSafeDate(format(resultDate, "yyyy年MM月dd日"));
+    const result = format(cancelDate, 'yyyy年MM月');
+    setCancelMonth(result);
   };
 
   return (
-    <div style={{ maxWidth: "600px", margin: "0 auto", padding: "20px" }}>
-      <h2>📅 解約安全日チェックツール</h2>
+    <div className="container">
+      <h1>解約月チェックツール</h1>
 
-      <div>
-        <label>契約日：</label><br />
-        <input type="date" value={contractDate} onChange={(e) => setContractDate(e.target.value)} />
+      <div className="form-group">
+        <label>契約月：</label>
+        <input
+          type="month"
+          value={contractDate}
+          onChange={(e) => setContractDate(e.target.value)}
+        />
       </div>
 
-      <div style={{ marginTop: "10px" }}>
-        <label>キャリア：</label><br />
-        <select value={carrier} onChange={(e) => setCarrier(e.target.value)}>
+      <div className="form-group">
+        <label>キャリア：</label>
+        <select
+          value={carrier}
+          onChange={(e) => setCarrier(e.target.value)}
+        >
           <option value="">選択してください</option>
           <option value="docomo">ドコモ</option>
-          <option value="au">au / UQ / povo</option>
-          <option value="softbank">ソフトバンク / LINEMO / Y!mobile</option>
-          <option value="rakuten">楽天モバイル</option>
-          <option value="mvno">格安SIM (例: IIJmio)</option>
+          <option value="au">au</option>
+          <option value="softbank">ソフトバンク</option>
         </select>
       </div>
 
-      <div style={{ marginTop: "10px" }}>
-        <label>プラン名（例：ahamo, LINEMOなど）：</label><br />
-        <input type="text" value={plan} onChange={(e) => setPlan(e.target.value)} />
-      </div>
+      <button onClick={calculateCancelMonth}>解約月をチェック</button>
 
-      <div style={{ marginTop: "10px" }}>
-        <label>キャッシュバック額（円）：</label><br />
-        <input type="number" value={cashback} onChange={(e) => setCashback(e.target.value)} />
-      </div>
-
-      <button style={{ marginTop: "15px" }} onClick={calculateSafeDate}>
-        安全な解約日を計算する
-      </button>
-
-      {safeDate && (
-        <div style={{ marginTop: "20px", fontWeight: "bold", color: "green" }}>
-          ✅ 安全に解約できる日は：{safeDate}
+      {cancelMonth && (
+        <div className="result">
+          <p>解約月は <strong>{cancelMonth}</strong> です。</p>
         </div>
       )}
     </div>
   );
 }
+
+export default App;
